@@ -1,0 +1,918 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cozy Pixel Study - Index15</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+    }
+
+    body, html {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background-color: #120e0c;
+      font-family: 'Courier New', Courier, monospace;
+    }
+
+    ::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: #19120e;
+      border-radius: 4px;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: #7a5c43;
+      border-radius: 4px;
+      border: 1px solid #3d2c20;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: #ffd89b;
+    }
+
+    * {
+      scrollbar-width: thin;
+      scrollbar-color: #7a5c43 #19120e;
+    }
+
+    .viewport {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .scene-container {
+      position: relative;
+      width: 100vw;
+      height: 56.25vw;
+      max-height: 100vh;
+      max-width: 177.78vh;
+      background-image: url('Room_1.png');
+      background-size: contain;
+      background-repeat: no-repeat;
+      background-position: center;
+      image-rendering: pixelated;
+      image-rendering: crisp-edges;
+    }
+
+    .scene-container::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      right: 0;
+      width: 12%;
+      height: 12%;
+      background-color: #120e0c;
+      z-index: 10;
+      pointer-events: none;
+    }
+
+    .room-ambient {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      background: radial-gradient(
+        circle at 53% 54%,
+        rgba(255, 130, 40, 0.12) 0%,
+        rgba(15, 8, 4, 0.5) 85%
+      );
+      mix-blend-mode: soft-light;
+      z-index: 2;
+    }
+
+    .fire-glow {
+      position: absolute;
+      top: 40%;
+      left: 55%;
+      width: 15%;
+      height: 25%;
+      pointer-events: none;
+      border-radius: 50%;
+      background: radial-gradient(
+        circle,
+        rgba(255, 140, 30, 0.6) 0%,
+        rgba(255, 70, 0, 0.35) 45%,
+        transparent 75%
+      );
+      mix-blend-mode: screen;
+      z-index: 3;
+      animation: hearthFlicker 2.5s infinite alternate ease-in-out;
+    }
+
+    @keyframes hearthFlicker {
+      0% { opacity: 0.35; transform: scale(0.96); }
+      20% { opacity: 0.65; transform: scale(1.04); }
+      45% { opacity: 0.40; transform: scale(0.98); }
+      70% { opacity: 0.75; transform: scale(1.06); }
+      85% { opacity: 0.50; transform: scale(1.01); }
+      100% { opacity: 0.70; transform: scale(1.03); }
+    }
+
+    .top-controls {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      z-index: 30;
+      display: flex;
+      gap: 6px;
+    }
+
+    .ui-btn {
+      background-color: #241a15;
+      color: #ffd89b;
+      border: 1px solid #7a5c43;
+      padding: 4px 8px;
+      border-radius: 3px;
+      font-family: 'Courier New', Courier, monospace;
+      font-size: 10px;
+      font-weight: bold;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.6);
+      transition: all 0.2s ease;
+    }
+
+    .ui-btn:hover {
+      background-color: #382920;
+      border-color: #ffd89b;
+    }
+
+    .hotspot {
+      position: absolute;
+      cursor: pointer;
+      border: 1px dashed transparent;
+      transition: all 0.2s ease;
+      z-index: 5;
+    }
+
+    .hotspot:hover {
+      border-color: rgba(255, 215, 0, 0.6);
+      background-color: rgba(255, 215, 0, 0.08);
+      box-shadow: 0 0 10px rgba(255, 215, 0, 0.2);
+    }
+
+    #zone-candle    { top: 52%; left: 12%;   width: 7%;    height: 12%; }
+    #zone-clock     { top: 12%; left: 18.5%; width: 5.5%; height: 42%; }
+    #zone-fireplace { top: 38%; left: 48%;   width: 20%;   height: 28%; }
+    #zone-bookshelf { top: 22%; left: 72%;   width: 10%;   height: 45%; }
+    #zone-table     { top: 62%; left: 26%;   width: 21%;   height: 18%; }
+    #zone-person    { top: 40%; left: 31%;   width: 15%;   height: 25%; }
+
+    .modal {
+      display: none;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 320px;
+      background-color: #241a15;
+      color: #e6d3b7;
+      border: 2px solid #7a5c43;
+      padding: 16px;
+      border-radius: 6px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+      z-index: 20;
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid #543d2b;
+      padding-bottom: 8px;
+      margin-bottom: 12px;
+    }
+
+    .modal-title {
+      font-size: 14px;
+      font-weight: bold;
+      color: #ffd89b;
+    }
+
+    .close-btn {
+      cursor: pointer;
+      color: #aa8665;
+      font-weight: bold;
+    }
+
+    .close-btn:hover {
+      color: #fff;
+    }
+
+    .modal-body {
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    .stat-card {
+      background: rgba(0, 0, 0, 0.25);
+      padding: 8px;
+      border-radius: 4px;
+      margin-bottom: 8px;
+      border: 1px solid #3d2c20;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .stat-value {
+      color: #ffd89b;
+      font-weight: bold;
+      font-size: 14px;
+    }
+
+    .clock-setting-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: rgba(0, 0, 0, 0.25);
+      padding: 6px 8px;
+      border-radius: 4px;
+      margin-bottom: 8px;
+      border: 1px solid #3d2c20;
+    }
+
+    .clock-btn {
+      background: #7a5c43;
+      color: #ffd89b;
+      border: none;
+      padding: 4px 8px;
+      font-family: inherit;
+      font-size: 11px;
+      cursor: pointer;
+      border-radius: 3px;
+    }
+
+    .clock-btn:hover {
+      background: #947154;
+    }
+
+    /* Fixed Iframe Container Position */
+    #yt-player-container {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 1px;
+      height: 1px;
+      opacity: 0.01;
+      pointer-events: none;
+      overflow: hidden;
+      z-index: 1;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="viewport">
+    <div class="scene-container">
+      
+      <div class="room-ambient"></div>
+      <div class="fire-glow" id="fireGlow"></div>
+
+      <div class="top-controls">
+        <button class="ui-btn" onclick="openModal('modal-music')">🎵 Music</button>
+        <button class="ui-btn" id="fireToggleBtn" onclick="toggleFireAudio(event)" title="Toggle Fireplace Sound">
+          <span id="fireIcon">🔥</span> Fire: <span id="fireLabel">OFF</span>
+        </button>
+      </div>
+
+      <div class="hotspot" id="zone-candle" title="Study Logbook & Candle"></div>
+      <div class="hotspot" id="zone-clock" title="Grandfather Clock"></div>
+      <div class="hotspot" id="zone-fireplace" title="Fireplace"></div>
+      <div class="hotspot" id="zone-bookshelf" title="Bookshelf"></div>
+      <div class="hotspot" id="zone-table" title="Coffee Table"></div>
+      <div class="hotspot" id="zone-person" title="Reader"></div>
+
+      <!-- Compact embedded frame target -->
+      <div id="yt-player-container">
+        <div id="yt-player"></div>
+      </div>
+
+      <div class="modal" id="modal-music">
+        <div class="modal-header">
+          <span class="modal-title">🎵 YouTube Audio Player</span>
+          <span class="close-btn" onclick="closeModals()">&times;</span>
+        </div>
+        <div class="modal-body">
+          <p style="margin-bottom: 8px;">Paste YouTube Video Link or ID:</p>
+          <div style="display: flex; gap: 4px; margin-bottom: 12px;">
+            <input type="text" id="yt-url-input" placeholder="https://www.youtube.com/watch?v=..." style="flex: 1; background: #120e0c; border: 1px solid #7a5c43; color: #e6d3b7; padding: 6px; font-family: inherit; font-size: 11px; border-radius: 3px;">
+            <button onclick="playYouTubeVideo()" style="background: #7a5c43; color: #ffd89b; border: none; padding: 6px 12px; font-family: inherit; font-size: 11px; cursor: pointer; border-radius: 3px; font-weight: bold;">Play</button>
+          </div>
+
+          <div class="stat-card" style="flex-direction: column; align-items: flex-start; gap: 4px;">
+            <span style="font-size: 10px; color: #aa8665;">NOW PLAYING:</span>
+            <span id="yt-status" style="color: #ffd89b; font-size: 11px; word-break: break-all;">No track loaded</span>
+          </div>
+
+          <div style="display: flex; gap: 6px; margin-top: 10px;">
+            <button onclick="pauseYT()" class="clock-btn" style="flex: 1;">Pause</button>
+            <button onclick="resumeYT()" class="clock-btn" style="flex: 1;">Resume</button>
+            <button onclick="stopYT()" class="clock-btn" style="background: #aa3838; flex: 1;">Stop</button>
+          </div>
+
+          <div style="display: flex; align-items: center; gap: 8px; margin-top: 12px; background: rgba(0,0,0,0.25); padding: 6px; border-radius: 4px; border: 1px solid #3d2c20;">
+            <span style="font-size: 10px;">Volume:</span>
+            <input type="range" id="yt-volume" min="0" max="100" value="70" onchange="setYTVolume(this.value)" oninput="setYTVolume(this.value)" style="flex: 1; accent-color: #ffd89b;">
+          </div>
+        </div>
+      </div>
+
+      <div class="modal" id="modal-fireplace">
+        <div class="modal-header">
+          <span class="modal-title">🔥 Hearth Control</span>
+          <span class="close-btn" onclick="closeModals()">&times;</span>
+        </div>
+        <div class="modal-body">
+          <p style="margin-bottom: 10px;">The fire crackles gently, radiating warmth across the room.</p>
+          <div class="clock-setting-row">
+            <span>Fire Sound:</span>
+            <button class="clock-btn" id="modalFireToggleBtn" onclick="toggleFireAudio(event)">Turn ON</button>
+          </div>
+          <div style="display: flex; align-items: center; gap: 8px; margin-top: 8px; background: rgba(0,0,0,0.25); padding: 6px; border-radius: 4px; border: 1px solid #3d2c20;">
+            <span style="font-size: 10px;">Fire Vol:</span>
+            <input type="range" id="fire-volume" min="0" max="1" step="0.05" value="0.4" onchange="setFireVolume(this.value)" oninput="setFireVolume(this.value)" style="flex: 1; accent-color: #ffd89b;">
+          </div>
+        </div>
+      </div>
+
+      <div class="modal" id="modal-bookshelf">
+        <div class="modal-header">
+          <span class="modal-title">📚 Cabin Library</span>
+          <span class="close-btn" onclick="closeModals()">&times;</span>
+        </div>
+        <div class="modal-body">
+          <p style="margin-bottom: 8px;">Saved Reading List:</p>
+          <ul id="book-list" style="list-style: none; padding: 0; margin-bottom: 12px; max-height: 150px; overflow-y: auto;"></ul>
+          <div style="display: flex; gap: 4px;">
+            <input type="text" id="new-book-input" placeholder="Add a new book..." style="flex: 1; background: #120e0c; border: 1px solid #7a5c43; color: #e6d3b7; padding: 4px; font-family: inherit; font-size: 11px; border-radius: 3px;">
+            <button onclick="addBook(event)" style="background: #7a5c43; color: #ffd89b; border: none; padding: 4px 8px; font-family: inherit; font-size: 11px; cursor: pointer;">Add</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal" id="modal-table">
+        <div class="modal-header">
+          <span class="modal-title">☕ Desk Tasks</span>
+          <span class="close-btn" onclick="closeModals()">&times;</span>
+        </div>
+        <div class="modal-body">
+          <p style="margin-bottom: 8px;">To-Do List:</p>
+          <div id="todo-list" style="max-height: 150px; overflow-y: auto; margin-bottom: 12px; padding-right: 4px;"></div>
+          <div style="display: flex; gap: 4px;">
+            <input type="text" id="new-todo-input" placeholder="Add a new task..." style="flex: 1; background: #120e0c; border: 1px solid #7a5c43; color: #e6d3b7; padding: 4px; font-family: inherit; font-size: 11px; border-radius: 3px;">
+            <button onclick="addTodo(event)" style="background: #7a5c43; color: #ffd89b; border: none; padding: 4px 8px; font-family: inherit; font-size: 11px; cursor: pointer;">Add</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal" id="modal-person">
+        <div class="modal-header">
+          <span class="modal-title">📖 Focus Mode</span>
+          <span class="close-btn" onclick="closeModals()">&times;</span>
+        </div>
+        <div class="modal-body">
+          <p>Status: Deep in concentration...</p>
+        </div>
+      </div>
+
+      <div class="modal" id="modal-clock">
+        <div class="modal-header">
+          <span class="modal-title">🕰️ Grandfather Clock</span>
+          <span class="close-btn" onclick="closeModals()">&times;</span>
+        </div>
+        <div class="modal-body" style="text-align: center;">
+          <p style="margin-bottom: 4px; opacity: 0.8;">Current Time</p>
+          <h2 id="digital-clock" style="color: #ffd89b; font-size: 22px; margin-bottom: 10px;">--:--:--</h2>
+          
+          <div class="clock-setting-row">
+            <span>Hourly Chimes:</span>
+            <button class="clock-btn" id="chimesToggleBtn" onclick="toggleChimes()">Enabled</button>
+          </div>
+
+          <div class="clock-setting-row" style="flex-direction: column; align-items: stretch; gap: 6px;">
+            <div style="display: flex; justify-content: space-between;">
+              <span>Study Timer:</span>
+              <strong id="timerDisplay" style="color: #ffd89b;">25:00</strong>
+            </div>
+            <div style="display: flex; gap: 4px;">
+              <button class="clock-btn" onclick="setTimerPreset(25)" style="flex: 1;">25m</button>
+              <button class="clock-btn" onclick="setTimerPreset(50)" style="flex: 1;">50m</button>
+              <button class="clock-btn" onclick="setTimerPreset(60)" style="flex: 1;">60m</button>
+              <button class="clock-btn" id="startTimerBtn" onclick="toggleTimer()" style="flex: 1; background: #aa5c38;">Start</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal" id="modal-candle">
+        <div class="modal-header">
+          <span class="modal-title">📜 Study Logbook</span>
+          <span class="close-btn" onclick="closeModals()">&times;</span>
+        </div>
+        <div class="modal-body">
+          <div class="stat-card">
+            <span>🔥 Daily Streak:</span>
+            <span class="stat-value" id="stat-streak">1 Day</span>
+          </div>
+          <div class="stat-card">
+            <span>⏱️ Total Study Time:</span>
+            <span class="stat-value" id="stat-hours">0.0 hrs</span>
+          </div>
+          <div class="stat-card">
+            <span>🍅 Pomodoros Completed:</span>
+            <span class="stat-value" id="stat-poms">0</span>
+          </div>
+          <div style="display: flex; gap: 4px; margin-top: 10px;">
+            <button onclick="logManualSession()" class="clock-btn" style="flex: 1;">+ Add 30m</button>
+            <button onclick="resetStats()" class="clock-btn" style="background: #aa3838;">Reset Log</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <audio id="clickSound" preload="auto">
+    <source src="dragon-studio-button-press-2-386176.mp3" type="audio/mp3">
+  </audio>
+
+  <audio id="fireAudio" loop preload="auto">
+    <source src="soundreality-fire-crackling-sound-499636.mp3" type="audio/mp3">
+  </audio>
+
+  <script src="https://www.youtube.com/iframe_api"></script>
+
+  <script>
+    const clickAudio = document.getElementById('clickSound');
+    const fireAudio = document.getElementById('fireAudio');
+    const fireToggleBtn = document.getElementById('fireToggleBtn');
+    const fireLabel = document.getElementById('fireLabel');
+    const modalFireToggleBtn = document.getElementById('modalFireToggleBtn');
+
+    let isFirePlaying = false;
+    let chimesEnabled = true;
+    fireAudio.volume = 0.4;
+    let audioCtx = null;
+
+    let ytPlayer = null;
+    let ytReady = false;
+
+    // Load YouTube API
+    function onYouTubeIframeAPIReady() {
+      ytPlayer = new YT.Player('yt-player', {
+        height: '200',
+        width: '200',
+        playerVars: {
+          'autoplay': 0,
+          'controls': 0,
+          'disablekb': 1,
+          'playsinline': 1
+        },
+        events: {
+          'onReady': () => {
+            ytReady = true;
+            const statusEl = document.getElementById('yt-status');
+            if (statusEl) statusEl.textContent = 'Player ready. Paste link to play.';
+          },
+          'onStateChange': onPlayerStateChange,
+          'onError': (e) => {
+            const statusEl = document.getElementById('yt-status');
+            if (statusEl) statusEl.textContent = 'Error loading track. Check URL/ID.';
+          }
+        }
+      });
+    }
+
+    function extractVideoId(url) {
+      if (!url) return null;
+      const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+      const match = url.match(regExp);
+      return (match && match[2].length === 11) ? match[2] : url.trim();
+    }
+
+    function playYouTubeVideo() {
+      const input = document.getElementById('yt-url-input');
+      const videoId = extractVideoId(input.value);
+      const statusEl = document.getElementById('yt-status');
+
+      if (!videoId) {
+        statusEl.textContent = 'Invalid Video URL or ID';
+        return;
+      }
+
+      if (ytReady && ytPlayer && ytPlayer.loadVideoById) {
+        ytPlayer.loadVideoById(videoId);
+        ytPlayer.playVideo();
+        statusEl.textContent = `Loading track: ${videoId}`;
+      } else {
+        statusEl.textContent = 'Player still initializing. Please wait 2 seconds...';
+      }
+    }
+
+    function pauseYT() {
+      if (ytReady && ytPlayer && ytPlayer.pauseVideo) {
+        ytPlayer.pauseVideo();
+      }
+    }
+
+    function resumeYT() {
+      if (ytReady && ytPlayer && ytPlayer.playVideo) {
+        ytPlayer.playVideo();
+      }
+    }
+
+    function stopYT() {
+      if (ytReady && ytPlayer && ytPlayer.stopVideo) {
+        ytPlayer.stopVideo();
+        document.getElementById('yt-status').textContent = 'Stopped';
+      }
+    }
+
+    function setYTVolume(val) {
+      if (ytReady && ytPlayer && ytPlayer.setVolume) {
+        ytPlayer.setVolume(val);
+      }
+    }
+
+    function onPlayerStateChange(event) {
+      const statusEl = document.getElementById('yt-status');
+      if (event.data === YT.PlayerState.PLAYING) {
+        statusEl.textContent = 'Playing Audio';
+      } else if (event.data === YT.PlayerState.PAUSED) {
+        statusEl.textContent = 'Paused';
+      } else if (event.data === YT.PlayerState.ENDED) {
+        statusEl.textContent = 'Track Ended';
+      } else if (event.data === YT.PlayerState.BUFFERING) {
+        statusEl.textContent = 'Buffering...';
+      }
+    }
+
+    function getAudioContext() {
+      if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+      return audioCtx;
+    }
+
+    function toggleFireAudio(e) {
+      if (e) e.stopPropagation();
+      isFirePlaying = !isFirePlaying;
+
+      if (isFirePlaying) {
+        fireAudio.play().catch(err => console.error("Fire Audio play failed:", err));
+        fireLabel.textContent = 'ON';
+        fireToggleBtn.style.opacity = '1';
+        if (modalFireToggleBtn) modalFireToggleBtn.textContent = 'Turn OFF';
+      } else {
+        fireAudio.pause();
+        fireLabel.textContent = 'OFF';
+        fireToggleBtn.style.opacity = '0.7';
+        if (modalFireToggleBtn) modalFireToggleBtn.textContent = 'Turn ON';
+      }
+    }
+
+    function setFireVolume(val) {
+      fireAudio.volume = parseFloat(val);
+    }
+
+    function playSynthClick() {
+      const ctx = getAudioContext();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(140, ctx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(40, ctx.currentTime + 0.04);
+
+      gain.gain.setValueAtTime(0.15, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.04);
+
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+
+      osc.start();
+      osc.stop(ctx.currentTime + 0.04);
+    }
+
+    function playGrandfatherChime(strikes = 1) {
+      if (!chimesEnabled) return;
+      const ctx = getAudioContext();
+      
+      for (let i = 0; i < strikes; i++) {
+        const startTime = ctx.currentTime + (i * 1.8);
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(261.63, startTime);
+
+        gain.gain.setValueAtTime(0.001, startTime);
+        gain.gain.exponentialRampToValueAtTime(0.4, startTime + 0.08);
+        gain.gain.exponentialRampToValueAtTime(0.0001, startTime + 2.5);
+
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+
+        osc.start(startTime);
+        osc.stop(startTime + 2.5);
+      }
+    }
+
+    function toggleChimes() {
+      chimesEnabled = !chimesEnabled;
+      const btn = document.getElementById('chimesToggleBtn');
+      btn.textContent = chimesEnabled ? 'Enabled' : 'Disabled';
+      btn.style.opacity = chimesEnabled ? '1' : '0.6';
+    }
+
+    function triggerClickSound() {
+      if (clickAudio) {
+        clickAudio.currentTime = 0;
+        clickAudio.play().catch(() => playSynthClick());
+      } else {
+        playSynthClick();
+      }
+    }
+
+    let lastChimedHour = -1;
+
+    function updateClock() {
+      const now = new Date();
+      const hours = now.getHours();
+      const minutes = now.getMinutes();
+      const seconds = now.getSeconds();
+
+      const currentHour12 = (hours % 12) || 12;
+
+      const digitalEl = document.getElementById('digital-clock');
+      if (digitalEl) {
+        digitalEl.textContent = now.toLocaleTimeString();
+      }
+
+      if (minutes === 0 && seconds === 0 && lastChimedHour !== hours) {
+        playGrandfatherChime(currentHour12);
+        lastChimedHour = hours;
+      }
+    }
+    setInterval(updateClock, 1000);
+
+    let stats = JSON.parse(localStorage.getItem('cozy_stats')) || {
+      streak: 1,
+      totalMinutes: 0,
+      poms: 0,
+      lastDate: new Date().toDateString()
+    };
+
+    function checkStreak() {
+      const today = new Date().toDateString();
+      if (stats.lastDate !== today) {
+        const yesterday = new Date();
+        yesterday.setDate(yesterday.getDate() - 1);
+        if (stats.lastDate === yesterday.toDateString()) {
+          stats.streak += 1;
+        } else {
+          stats.streak = 1;
+        }
+        stats.lastDate = today;
+        saveStats();
+      }
+    }
+
+    function saveStats() {
+      localStorage.setItem('cozy_stats', JSON.stringify(stats));
+      renderStats();
+    }
+
+    function renderStats() {
+      document.getElementById('stat-streak').textContent = `${stats.streak} Day${stats.streak > 1 ? 's' : ''}`;
+      document.getElementById('stat-hours').textContent = `${(stats.totalMinutes / 60).toFixed(1)} hrs`;
+      document.getElementById('stat-poms').textContent = stats.poms;
+    }
+
+    function recordCompletedSession(minutes) {
+      checkStreak();
+      stats.totalMinutes += minutes;
+      stats.poms += 1;
+      saveStats();
+    }
+
+    function logManualSession() {
+      recordCompletedSession(30);
+    }
+
+    function resetStats() {
+      if (confirm('Reset all study logs and streaks?')) {
+        stats = { streak: 1, totalMinutes: 0, poms: 0, lastDate: new Date().toDateString() };
+        saveStats();
+      }
+    }
+
+    let timerDuration = 25 * 60;
+    let timerRemaining = timerDuration;
+    let timerInterval = null;
+
+    function formatTime(sec) {
+      const m = Math.floor(sec / 60).toString().padStart(2, '0');
+      const s = (sec % 60).toString().padStart(2, '0');
+      return `${m}:${s}`;
+    }
+
+    function updateTimerDisplay() {
+      document.getElementById('timerDisplay').textContent = formatTime(timerRemaining);
+    }
+
+    function setTimerPreset(mins) {
+      if (timerInterval) clearInterval(timerInterval);
+      timerInterval = null;
+      document.getElementById('startTimerBtn').textContent = 'Start';
+      timerDuration = mins * 60;
+      timerRemaining = timerDuration;
+      updateTimerDisplay();
+    }
+
+    function toggleTimer() {
+      const btn = document.getElementById('startTimerBtn');
+      if (timerInterval) {
+        clearInterval(timerInterval);
+        timerInterval = null;
+        btn.textContent = 'Start';
+      } else {
+        btn.textContent = 'Pause';
+        timerInterval = setInterval(() => {
+          if (timerRemaining > 0) {
+            timerRemaining--;
+            updateTimerDisplay();
+          } else {
+            clearInterval(timerInterval);
+            timerInterval = null;
+            btn.textContent = 'Start';
+            playGrandfatherChime(3);
+            recordCompletedSession(Math.round(timerDuration / 60));
+            alert('Study session complete! Recorded to your logbook.');
+          }
+        }, 1000);
+      }
+    }
+
+    function closeModals() {
+      document.querySelectorAll('.modal').forEach(m => m.style.display = 'none');
+    }
+
+    function openModal(id) {
+      closeModals();
+      document.getElementById(id).style.display = 'block';
+    }
+
+    document.getElementById('zone-candle').addEventListener('click', (e) => {
+      e.stopPropagation(); triggerClickSound(); openModal('modal-candle');
+    });
+
+    document.getElementById('zone-fireplace').addEventListener('click', (e) => {
+      e.stopPropagation(); triggerClickSound(); openModal('modal-fireplace');
+    });
+
+    document.getElementById('zone-bookshelf').addEventListener('click', (e) => {
+      e.stopPropagation(); triggerClickSound(); openModal('modal-bookshelf');
+    });
+
+    document.getElementById('zone-table').addEventListener('click', (e) => {
+      e.stopPropagation(); triggerClickSound(); openModal('modal-table');
+    });
+
+    document.getElementById('zone-person').addEventListener('click', (e) => {
+      e.stopPropagation(); triggerClickSound(); openModal('modal-person');
+    });
+
+    document.getElementById('zone-clock').addEventListener('click', (e) => {
+      e.stopPropagation(); triggerClickSound(); openModal('modal-clock');
+    });
+
+    window.addEventListener('click', (e) => {
+      if (!e.target.closest('.modal') && !e.target.closest('.hotspot') && !e.target.closest('.top-controls')) {
+        triggerClickSound();
+        closeModals();
+      }
+    });
+
+    let books = JSON.parse(localStorage.getItem('cozy_books')) || [
+      "The Old Man and the Sea",
+      "Norwegian Wood",
+      "Design Patterns in JS"
+    ];
+
+    function saveBooks() { localStorage.setItem('cozy_books', JSON.stringify(books)); }
+
+    function renderBooks() {
+      const bookListEl = document.getElementById('book-list');
+      bookListEl.innerHTML = '';
+      books.forEach((book, index) => {
+        const li = document.createElement('li');
+        li.style.cssText = 'display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; background: rgba(0,0,0,0.2); padding: 4px 6px; border-radius: 3px;';
+        li.innerHTML = `
+          <span contenteditable="true" onblur="editBook(${index}, this.innerText)" style="outline: none; flex: 1; margin-right: 6px;">${book}</span>
+          <span onclick="deleteBook(event, ${index})" style="cursor: pointer; color: #ff6b6b; font-weight: bold; font-size: 11px;" title="Delete">&times;</span>
+        `;
+        bookListEl.appendChild(li);
+      });
+    }
+
+    function addBook(e) {
+      if (e) e.stopPropagation();
+      const input = document.getElementById('new-book-input');
+      const title = input.value.trim();
+      if (title) { books.push(title); saveBooks(); renderBooks(); input.value = ''; }
+    }
+
+    function editBook(index, newTitle) {
+      const trimmed = newTitle.trim();
+      if (trimmed) books[index] = trimmed; else books.splice(index, 1);
+      saveBooks(); renderBooks();
+    }
+
+    function deleteBook(e, index) {
+      if (e) e.stopPropagation();
+      books.splice(index, 1);
+      saveBooks();
+      renderBooks();
+    }
+
+    let todos = JSON.parse(localStorage.getItem('cozy_todos')) || [
+      { text: "Finish room setup", completed: true },
+      { text: "Read chapter 4", completed: false },
+      { text: "Drink hot tea", completed: false }
+    ];
+
+    function saveTodos() { localStorage.setItem('cozy_todos', JSON.stringify(todos)); }
+
+    function renderTodos() {
+      const todoListEl = document.getElementById('todo-list');
+      todoListEl.innerHTML = '';
+      todos.forEach((todo, index) => {
+        const item = document.createElement('div');
+        item.style.cssText = 'display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; background: rgba(0,0,0,0.2); padding: 4px 6px; border-radius: 3px;';
+        item.innerHTML = `
+          <div style="display: flex; align-items: center; gap: 8px; flex: 1;">
+            <input type="checkbox" ${todo.completed ? 'checked' : ''} onchange="toggleTodo(event, ${index})">
+            <span contenteditable="true" onblur="editTodo(${index}, this.innerText)" style="outline: none; ${todo.completed ? 'text-decoration: line-through; opacity: 0.6;' : ''}">${todo.text}</span>
+          </div>
+          <span onclick="deleteTodo(event, ${index})" style="cursor: pointer; color: #ff6b6b; font-weight: bold; font-size: 11px; margin-left: 6px;" title="Delete">&times;</span>
+        `;
+        todoListEl.appendChild(item);
+      });
+    }
+
+    function addTodo(e) {
+      if (e) e.stopPropagation();
+      const input = document.getElementById('new-todo-input');
+      const text = input.value.trim();
+      if (text) { todos.push({ text: text, completed: false }); saveTodos(); renderTodos(); input.value = ''; }
+    }
+
+    function toggleTodo(e, index) {
+      if (e) e.stopPropagation();
+      todos[index].completed = !todos[index].completed;
+      saveTodos();
+      renderTodos();
+    }
+
+    function editTodo(index, newText) {
+      const trimmed = newText.trim();
+      if (trimmed) todos[index].text = trimmed; else todos.splice(index, 1);
+      saveTodos(); renderTodos();
+    }
+
+    function deleteTodo(e, index) {
+      if (e) e.stopPropagation();
+      todos.splice(index, 1);
+      saveTodos();
+      renderTodos();
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      updateClock();
+      updateTimerDisplay();
+      checkStreak();
+      renderStats();
+      renderBooks();
+      renderTodos();
+    });
+  </script>
+</body>
+</html>
